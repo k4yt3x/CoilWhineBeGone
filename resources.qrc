@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>coilwhinebegone.ico</file>
+    </qresource>
+</RCC>

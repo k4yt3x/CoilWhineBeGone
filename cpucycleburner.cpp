@@ -5,25 +5,19 @@
 
 #include <QDebug>
 
-CpuCycleBurner::CpuCycleBurner()
-    : m_isRunning(false)
-    , m_utilizationPercent(50)
-{
+CpuCycleBurner::CpuCycleBurner() : m_isRunning(false), m_utilizationPercent(50) {
     signal(SIGINT, CpuCycleBurner::signalHandler);
 }
 
-CpuCycleBurner::~CpuCycleBurner()
-{
+CpuCycleBurner::~CpuCycleBurner() {
     stop();
 }
 
-void CpuCycleBurner::signalHandler(int signum)
-{
+void CpuCycleBurner::signalHandler(int signum) {
     qDebug() << "\nInterrupt signal (" << signum << ") received. Stopping threads...";
 }
 
-void CpuCycleBurner::threadProc(int threadId)
-{
+void CpuCycleBurner::threadProc(int threadId) {
     while (m_isRunning) {
         auto start = std::chrono::high_resolution_clock::now();
 
@@ -32,10 +26,8 @@ void CpuCycleBurner::threadProc(int threadId)
         int idleTimeMs = 100 - activeTimeMs;
 
         // Active time: Burn CPU cycles
-        while (std::chrono::duration_cast<std::chrono::milliseconds>(
-                   std::chrono::high_resolution_clock::now() - start)
-                   .count()
-               < activeTimeMs) {
+        while (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start)
+                   .count() < activeTimeMs) {
             volatile int dummy = 0;
             dummy++;
         }
@@ -49,8 +41,7 @@ void CpuCycleBurner::threadProc(int threadId)
     qDebug() << "Thread " << threadId << " stopping.";
 }
 
-void CpuCycleBurner::start()
-{
+void CpuCycleBurner::start() {
     std::unique_lock<std::mutex> lock(m_startStopMutex);
     if (m_isRunning) {
         qDebug() << "CpuCycleBurner is already running.";
@@ -72,8 +63,7 @@ void CpuCycleBurner::start()
     }
 }
 
-void CpuCycleBurner::stop()
-{
+void CpuCycleBurner::stop() {
     {
         std::unique_lock<std::mutex> lock(m_startStopMutex);
         if (!m_isRunning) {
@@ -86,7 +76,7 @@ void CpuCycleBurner::stop()
 
     m_startStopCv.notify_all();
 
-    for (auto &thread : m_threads) {
+    for (auto& thread : m_threads) {
         if (thread.joinable()) {
             thread.join();
         }
@@ -95,8 +85,7 @@ void CpuCycleBurner::stop()
     m_threads.clear();
 }
 
-void CpuCycleBurner::setUtilizationPercent(int utilizationPercent)
-{
+void CpuCycleBurner::setUtilizationPercent(int utilizationPercent) {
     if (utilizationPercent < 0) {
         utilizationPercent = 0;
     } else if (utilizationPercent > 100) {

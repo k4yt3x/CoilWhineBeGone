@@ -20,6 +20,11 @@ qt_add_executable(CoilWhineBeGone
     cpucycleburner.cpp
 )
 
+qt_add_resources(CoilWhineBeGone "resources"
+    PREFIX "/"
+    FILES coilwhinebegone.ico
+)
+
 target_link_libraries(CoilWhineBeGone
     PRIVATE
         Qt::Core

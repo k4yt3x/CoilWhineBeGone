@@ -85,10 +85,11 @@ void MainWindow::changeEvent(QEvent* event) {
         if (isMinimized() && m_trayIcon && m_trayIcon->isVisible() && !m_isClosing) {
             // Hide to system tray when minimized (but not when closing)
             hide();
-            if (m_trayIcon->supportsMessages()) {
+            if (m_trayIcon->supportsMessages() && !m_trayIconHintShown) {
                 m_trayIcon->showMessage(
                     tr("CoilWhineBeGone"), tr("Application minimized to tray"), QSystemTrayIcon::Information, 2000
                 );
+                m_trayIconHintShown = true;
             }
         }
     }

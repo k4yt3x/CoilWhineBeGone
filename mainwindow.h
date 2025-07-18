@@ -36,12 +36,13 @@ private:
   Ui::MainWindow *ui;
   QSystemTrayIcon *m_trayIcon;
   QMenu *m_trayIconMenu;
+  bool m_trayIconHintShown = false;
   QAction *m_restoreAction;
   QAction *m_quitAction;
   CpuCycleBurner m_cpuCycleBurner;
   bool m_isClosing;
 };
 
-const QString kVersion = "1.1.0";
+const QString kVersion = "1.2.0";
 
 #endif // MAINWINDOW_H

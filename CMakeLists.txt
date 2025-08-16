@@ -18,6 +18,14 @@ qt_add_executable(CoilWhineBeGone
     src/settingsmanager.cpp
 )
 
+
+target_compile_options(CoilWhineBeGone PRIVATE
+    $<$<CONFIG:Release>:-Os>
+)
+target_link_options(CoilWhineBeGone PRIVATE
+    $<$<CONFIG:Release>:-s>
+)
+
 qt_add_resources(CoilWhineBeGone "resources"
     PREFIX "/"
     FILES resources/coilwhinebegone.ico

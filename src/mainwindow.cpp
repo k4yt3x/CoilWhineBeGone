@@ -15,9 +15,26 @@
 
 #include <Windows.h>
 
-MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWindow), m_isClosing(false) {
+#include "settingsmanager.h"
+
+MainWindow::MainWindow(QWidget* parent)
+    : QMainWindow(parent),
+      ui(new Ui::MainWindow),
+      m_trayIcon(nullptr),
+      m_trayIconMenu(nullptr),
+      m_trayIconHintShown(false),
+      m_trayAvailable(false),
+      m_restoreAction(nullptr),
+      m_quitAction(nullptr),
+      m_isClosing(false) {
     ui->setupUi(this);
     this->setWindowTitle("Coil Whine Be Gone " + kVersion);
+
+    // Check if system tray is available
+    m_trayAvailable = QSystemTrayIcon::isSystemTrayAvailable();
+
+    // Initialize settings manager
+    SettingsManager::instance().loadSettings();
 
     ui->stopPushButton->setVisible(false);
     ui->statusbar->showMessage(tr("Status: Stopped"));
@@ -42,16 +59,36 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
         m_cpuCycleBurner.setUtilizationPercent(ui->utilizationPercentageSlider->value());
     });
 
+    // Connect closeToTray checkbox to settings
+    connect(ui->closeToTrayCheckBox, &QCheckBox::toggled, [this](bool checked) {
+        SettingsManager::instance().setCloseToTray(checked);
+    });
+
+    // Connect minimizeNotify checkbox to settings
+    connect(ui->minimizeNotifyCheckBox, &QCheckBox::toggled, [this](bool checked) {
+        SettingsManager::instance().setMinimizeNotify(checked);
+    });
+
     // Set the initial utilization percentage
     ui->utilizationPercentageSlider->setValue(35);
+
+    // Initialize UI state from settings
+    ui->closeToTrayCheckBox->setChecked(SettingsManager::instance().closeToTray());
+    ui->minimizeNotifyCheckBox->setChecked(SettingsManager::instance().minimizeNotify());
+
+    // Disable closeToTray checkbox if system tray is not available
+    if (!m_trayAvailable) {
+        ui->closeToTrayCheckBox->setEnabled(false);
+        ui->closeToTrayCheckBox->setToolTip(tr("System tray is not available on this system"));
+        ui->minimizeNotifyCheckBox->setEnabled(false);
+        ui->minimizeNotifyCheckBox->setToolTip(tr("System tray is not available on this system"));
+    }
 
     // Set the current process's priority to Low
     SetPriorityClass(GetCurrentProcess(), IDLE_PRIORITY_CLASS);
 
-    // Check if system tray is available
-    if (!QSystemTrayIcon::isSystemTrayAvailable()) {
-        QMessageBox::critical(this, tr("System Tray"), tr("System tray is not available on this system."));
-    } else {
+    // Create tray icon if system tray is available
+    if (m_trayAvailable) {
         createTrayIcon();
     }
 }
@@ -68,30 +105,24 @@ void MainWindow::setVisible(bool visible) {
 }
 
 void MainWindow::closeEvent(QCloseEvent* event) {
-    // Set flag to prevent minimize-to-tray behavior
-    m_isClosing = true;
-
-    // Ensure the application actually closes when X button is clicked
-    event->accept();
-    if (m_trayIcon) {
-        m_trayIcon->hide();
-    }
-    qApp->quit();
-}
-
-void MainWindow::changeEvent(QEvent* event) {
-    QMainWindow::changeEvent(event);
-    if (event->type() == QEvent::WindowStateChange) {
-        if (isMinimized() && m_trayIcon && m_trayIcon->isVisible() && !m_isClosing) {
-            // Hide to system tray when minimized (but not when closing)
-            hide();
-            if (m_trayIcon->supportsMessages() && !m_trayIconHintShown) {
-                m_trayIcon->showMessage(
-                    tr("CoilWhineBeGone"), tr("Application minimized to tray"), QSystemTrayIcon::Information, 2000
-                );
-                m_trayIconHintShown = true;
-            }
+    if (SettingsManager::instance().closeToTray() && m_trayAvailable && m_trayIcon && m_trayIcon->isVisible()) {
+        // Hide to system tray instead of closing
+        hide();
+        if (m_trayIcon->supportsMessages() && !m_trayIconHintShown && SettingsManager::instance().minimizeNotify()) {
+            m_trayIcon->showMessage(
+                tr("CoilWhineBeGone"), tr("Application was minimized to tray"), QSystemTrayIcon::Information, 2000
+            );
+            m_trayIconHintShown = true;
         }
+        event->ignore();
+    } else {
+        // Close the application
+        m_isClosing = true;
+        event->accept();
+        if (m_trayIcon) {
+            m_trayIcon->hide();
+        }
+        qApp->quit();
     }
 }
 
@@ -113,6 +144,10 @@ void MainWindow::iconActivated(QSystemTrayIcon::ActivationReason reason) {
 }
 
 void MainWindow::createTrayIcon() {
+    if (!m_trayAvailable) {
+        return;
+    }
+
     m_trayIconMenu = new QMenu(this);
     m_restoreAction = m_trayIconMenu->addAction(tr("&Restore"), this, &QWidget::showNormal);
     m_trayIconMenu->addSeparator();
@@ -121,7 +156,7 @@ void MainWindow::createTrayIcon() {
     m_trayIcon = new QSystemTrayIcon(this);
 
     // Try to load custom icon, fallback to system icon if it fails
-    QIcon icon = QIcon(":/coilwhinebegone.ico");
+    QIcon icon = QIcon(":/resources/coilwhinebegone.ico");
     if (icon.isNull()) {
         icon = style()->standardIcon(QStyle::SP_ComputerIcon);
     }

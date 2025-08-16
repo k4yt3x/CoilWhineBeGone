@@ -5,24 +5,22 @@ find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets)
 
 qt_standard_project_setup()
 
-if(WIN32)
-    set(APP_RESOURCE_FILE resources.rc)
-endif()
-
 qt_add_executable(CoilWhineBeGone
-    WIN32 MACOSX_BUNDLE
-    resources.rc
-    main.cpp
-    mainwindow.cpp
-    mainwindow.h
-    mainwindow.ui
-    cpucycleburner.h
-    cpucycleburner.cpp
+    WIN32
+    src/resources.rc
+    src/main.cpp
+    src/mainwindow.cpp
+    src/mainwindow.h
+    src/mainwindow.ui
+    src/cpucycleburner.h
+    src/cpucycleburner.cpp
+    src/settingsmanager.h
+    src/settingsmanager.cpp
 )
 
 qt_add_resources(CoilWhineBeGone "resources"
     PREFIX "/"
-    FILES coilwhinebegone.ico
+    FILES resources/coilwhinebegone.ico
 )
 
 target_link_libraries(CoilWhineBeGone

@@ -15,8 +15,6 @@ public:
 
     void start();
     void stop();
-
-    // New method to set CPU usage active time
     void setUtilizationPercent(int utilizationPercent);
 
 private:

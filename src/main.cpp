@@ -8,7 +8,7 @@ int main(int argc, char* argv[]) {
     QApplication a(argc, argv);
 
     // Set application icon (serves as fallback for tray icon)
-    a.setWindowIcon(QIcon(":/coilwhinebegone.ico"));
+    a.setWindowIcon(QIcon(":/resources/coilwhinebegone.ico"));
 
     // Don't quit when the last window is closed (needed for system tray)
     QApplication::setQuitOnLastWindowClosed(false);

@@ -1,5 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>coilwhinebegone.ico</file>
+        <file>../resources/coilwhinebegone.ico</file>
     </qresource>
 </RCC>

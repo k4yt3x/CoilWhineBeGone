@@ -7,6 +7,11 @@
 int main(int argc, char* argv[]) {
     QApplication a(argc, argv);
 
+    // Set application metadata for proper settings storage
+    QCoreApplication::setOrganizationName("CoilWhineBeGone");
+    QCoreApplication::setApplicationName("CoilWhineBeGone");
+    QCoreApplication::setApplicationVersion(kVersion);
+
     // Set application icon (serves as fallback for tray icon)
     a.setWindowIcon(QIcon(":/resources/coilwhinebegone.ico"));
 

@@ -7,17 +7,17 @@
 #include <thread>
 #include <vector>
 
-class CpuCycleBurner
-{
-public:
+class CpuCycleBurner {
+   public:
     CpuCycleBurner();
     ~CpuCycleBurner();
 
     void start();
     void stop();
     void setUtilizationPercent(int utilizationPercent);
+    bool isRunning() const;
 
-private:
+   private:
     static void signalHandler(int signum);
     void threadProc(int threadId);
 
@@ -28,4 +28,4 @@ private:
     std::condition_variable m_startStopCv;
 };
 
-#endif // CPUCYCLEBURNER_H
+#endif  // CPUCYCLEBURNER_H

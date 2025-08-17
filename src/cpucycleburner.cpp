@@ -94,3 +94,7 @@ void CpuCycleBurner::setUtilizationPercent(int utilizationPercent) {
     m_utilizationPercent.store(utilizationPercent);
     qDebug() << "CPU utilization set to " << m_utilizationPercent.load() << "%.";
 }
+
+bool CpuCycleBurner::isRunning() const {
+    return m_isRunning.load();
+}

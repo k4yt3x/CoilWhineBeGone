@@ -26,6 +26,9 @@ MainWindow::MainWindow(QWidget* parent)
       m_trayAvailable(false),
       m_restoreAction(nullptr),
       m_quitAction(nullptr),
+      m_statusAction(nullptr),
+      m_startAction(nullptr),
+      m_stopAction(nullptr),
       m_isClosing(false) {
     ui->setupUi(this);
     this->setWindowTitle("Coil Whine Be Gone " + kVersion);
@@ -40,18 +43,8 @@ MainWindow::MainWindow(QWidget* parent)
     ui->statusbar->showMessage(tr("Status: Stopped"));
 
     connect(new QShortcut(QKeySequence("Ctrl+Q"), this), &QShortcut::activated, &QApplication::quit);
-    connect(ui->startPushButton, &QPushButton::clicked, [&]() {
-        m_cpuCycleBurner.start();
-        ui->startPushButton->setVisible(false);
-        ui->stopPushButton->setVisible(true);
-        ui->statusbar->showMessage(tr("Status: Running"));
-    });
-    connect(ui->stopPushButton, &QPushButton::clicked, [&]() {
-        m_cpuCycleBurner.stop();
-        ui->startPushButton->setVisible(true);
-        ui->stopPushButton->setVisible(false);
-        ui->statusbar->showMessage(tr("Status: Stopped"));
-    });
+    connect(ui->startPushButton, &QPushButton::clicked, this, &MainWindow::startCpuBurner);
+    connect(ui->stopPushButton, &QPushButton::clicked, this, &MainWindow::stopCpuBurner);
     connect(ui->utilizationPercentageSlider, &QSlider::valueChanged, [this](int value) {
         ui->utilizationPercentageSpinBox->setValue(value);
     });
@@ -149,6 +142,20 @@ void MainWindow::createTrayIcon() {
     }
 
     m_trayIconMenu = new QMenu(this);
+
+    // Add status display
+    m_statusAction = m_trayIconMenu->addAction(tr("Status: Stopped"));
+    m_statusAction->setEnabled(false);
+
+    m_trayIconMenu->addSeparator();
+
+    // Add start/stop actions
+    m_startAction = m_trayIconMenu->addAction(tr("&Start"), this, &MainWindow::startCpuBurner);
+    m_stopAction = m_trayIconMenu->addAction(tr("St&op"), this, &MainWindow::stopCpuBurner);
+    m_stopAction->setEnabled(false);
+
+    m_trayIconMenu->addSeparator();
+
     m_restoreAction = m_trayIconMenu->addAction(tr("&Restore"), this, &QWidget::showNormal);
     m_trayIconMenu->addSeparator();
     m_quitAction = m_trayIconMenu->addAction(tr("&Quit"), qApp, &QCoreApplication::quit);
@@ -168,4 +175,38 @@ void MainWindow::createTrayIcon() {
     connect(m_trayIcon, &QSystemTrayIcon::activated, this, &MainWindow::iconActivated);
 
     m_trayIcon->show();
+}
+
+void MainWindow::startCpuBurner() {
+    m_cpuCycleBurner.start();
+    ui->startPushButton->setVisible(false);
+    ui->stopPushButton->setVisible(true);
+    ui->statusbar->showMessage(tr("Status: Running"));
+    updateTrayStatus();
+}
+
+void MainWindow::stopCpuBurner() {
+    m_cpuCycleBurner.stop();
+    ui->startPushButton->setVisible(true);
+    ui->stopPushButton->setVisible(false);
+    ui->statusbar->showMessage(tr("Status: Stopped"));
+    updateTrayStatus();
+}
+
+void MainWindow::updateTrayStatus() {
+    if (!m_trayAvailable || !m_statusAction || !m_startAction || !m_stopAction) {
+        return;
+    }
+
+    bool isRunning = m_cpuCycleBurner.isRunning();
+
+    if (isRunning) {
+        m_statusAction->setText(tr("Status: Running"));
+        m_startAction->setEnabled(false);
+        m_stopAction->setEnabled(true);
+    } else {
+        m_statusAction->setText(tr("Status: Stopped"));
+        m_startAction->setEnabled(true);
+        m_stopAction->setEnabled(false);
+    }
 }

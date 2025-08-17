@@ -25,6 +25,9 @@ class MainWindow : public QMainWindow {
 
    private slots:
     void iconActivated(QSystemTrayIcon::ActivationReason reason);
+    void startCpuBurner();
+    void stopCpuBurner();
+    void updateTrayStatus();
 
    protected:
     void closeEvent(QCloseEvent* event) override;
@@ -41,10 +44,13 @@ class MainWindow : public QMainWindow {
     bool m_trayAvailable = false;
     QAction* m_restoreAction;
     QAction* m_quitAction;
+    QAction* m_statusAction;
+    QAction* m_startAction;
+    QAction* m_stopAction;
     CpuCycleBurner m_cpuCycleBurner;
     bool m_isClosing;
 };
 
-const QString kVersion = "1.3.0";
+const QString kVersion = "1.4.0";
 
 #endif  // MAINWINDOW_H
